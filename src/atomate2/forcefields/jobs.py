@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-<<<<<<< HEAD
 __all__ = [
     "ForceFieldStaticMaker",
     "ForceFieldRelaxMaker",
@@ -34,9 +33,6 @@ __all__ = [
     "DeepMDStaticMaker",
 ]
 
-
-=======
->>>>>>> 04a5f934df8c5bfabf525df403019eb5a9d60699
 @dataclass
 class ForceFieldRelaxMaker(Maker):
     """
@@ -289,18 +285,13 @@ class M3GNetRelaxMaker(Maker):
     """
 
     name: str = "M3GNet relax"
-<<<<<<< HEAD
-    relax_cell: bool = False
-=======
     force_field_name: str = "M3GNet"
     relax_cell: bool = True
->>>>>>> 04a5f934df8c5bfabf525df403019eb5a9d60699
     steps: int = 500
     relax_kwargs: dict = field(default_factory=dict)
     optimizer_kwargs: dict = field(default_factory=dict)
     task_document_kwargs: dict = field(default_factory=dict)
 
-<<<<<<< HEAD
     @job(output_schema=ForceFieldTaskDocument)
     def make(self, structure: Structure):
         """
@@ -311,9 +302,6 @@ class M3GNetRelaxMaker(Maker):
         structure: .Structure
             A pymatgen structure.
         """
-=======
-    def _relax(self, structure: Structure) -> dict:
->>>>>>> 04a5f934df8c5bfabf525df403019eb5a9d60699
         import matgl
         from matgl.ext.ase import Relaxer
 
@@ -331,15 +319,11 @@ class M3GNetRelaxMaker(Maker):
             potential=potential, relax_cell=self.relax_cell, **self.optimizer_kwargs
         )
 
-<<<<<<< HEAD
         result = relaxer.relax(
             structure,
             steps=self.steps,
             **self.relax_kwargs,
         )
-=======
-        return relaxer.relax(structure, steps=self.steps, **self.relax_kwargs)
->>>>>>> 04a5f934df8c5bfabf525df403019eb5a9d60699
 
         return ForceFieldTaskDocument.from_ase_compatible_result(
             "M3GNet",
@@ -575,11 +559,7 @@ class GAPStaticMaker(ForceFieldStaticMaker):
     potential_param_file_name: str | Path
         param_file_name for :obj:`quippy.potential.Potential()'`.
     potential_kwargs: dict
-<<<<<<< HEAD
-       Further kwargs for :obj: quippy.potential.Potential()'.
-=======
         Further keywords for :obj:`quippy.potential.Potential()'`.
->>>>>>> 04a5f934df8c5bfabf525df403019eb5a9d60699
     """
 
     name: str = "GAP static"
