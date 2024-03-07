@@ -149,15 +149,21 @@ def generate_phonon_displacements(
         code to perform the computations
     """
     warnings.warn(
-        "Initial magnetic moments will not be considered for the determination "
-        "of the symmetry of the structure and thus will be removed now.",
+        "Initial magnetic moments will only be considered for the determination "
+        "of the symmetry of the structure if a VASP calculator is used and else "
+        "they will be removed."
+        "If you use magnetic moments ensure that the cell is already primitive",
         stacklevel=1,
     )
-    cell = get_phonopy_structure(
-        structure.remove_site_property(property_name="magmom")
-        if "magmom" in structure.site_properties
-        else structure
-    )
+    if "magmom" in structure.site_properties:
+        if (
+            code != "vasp"
+            or (np.array(structure.site_properties.get("magmom")) < symprec).all()
+        ):
+            structure.remove_site_property(property_name="magmom")
+
+    cell = get_phonopy_structure(structure)
+
     factor = get_factor(code)
 
     # a bit of code repetition here as I currently
@@ -242,10 +248,15 @@ def generate_frequencies_eigenvectors(
     kwargs: dict
         Additional parameters that are passed to PhononBSDOSDoc.from_forces_born
     """
+    if "magmom" in structure.site_properties:
+        if (
+            code != "vasp"
+            or (np.array(structure.site_properties.get("magmom")) < symprec).all()
+        ):
+            structure.remove_site_property(property_name="magmom")
+
     return PhononBSDOSDoc.from_forces_born(
-        structure=structure.remove_site_property(property_name="magmom")
-        if "magmom" in structure.site_properties
-        else structure,
+        structure=structure,
         supercell_matrix=supercell_matrix,
         displacement=displacement,
         sym_reduce=sym_reduce,

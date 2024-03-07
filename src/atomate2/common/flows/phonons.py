@@ -201,7 +201,17 @@ class BasePhononMaker(Maker, ABC):
                 f"You can't use {kpath_scheme=} with the primitive standard "
                 "structure, please use seekpath"
             )
-
+        if (
+            structure.site_properties.get("magmom")
+            and self.code == "vasp"
+            and any(structure.site_properties.get("magmom") > self.symprec)
+            and (use_symmetrized_structure != "primitive" or kpath_scheme != "seekpath")
+        ):
+            raise ValueError(
+                "For materials with magnetic moments specified "
+                "use_symmetrized_structure must be 'primitive "
+                "and kpath_scheme must be seekpath."
+            )
         valid_schemes = ("seekpath", "hinuma", "setyawan_curtarolo", "latimer_munro")
         if kpath_scheme not in valid_schemes:
             raise ValueError(
