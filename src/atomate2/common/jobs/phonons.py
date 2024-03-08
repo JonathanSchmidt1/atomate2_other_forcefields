@@ -155,12 +155,11 @@ def generate_phonon_displacements(
         "If you use magnetic moments ensure that the cell is already primitive",
         stacklevel=1,
     )
-    if "magmom" in structure.site_properties:
-        if (
-            code != "vasp"
-            or (np.array(structure.site_properties.get("magmom")) < symprec).all()
-        ):
-            structure.remove_site_property(property_name="magmom")
+    if "magmom" in structure.site_properties and (
+        code != "vasp"
+        or (np.array(structure.site_properties.get("magmom")) < symprec).all()
+    ):
+        structure.remove_site_property(property_name="magmom")
 
     cell = get_phonopy_structure(structure)
 
@@ -174,7 +173,11 @@ def generate_phonon_displacements(
         primitive_matrix = "auto"
 
     # TARP: THIS IS BAD! Including for discussions sake
-    if cell.magnetic_moments is not None and primitive_matrix == "auto":
+    if (
+        cell.magnetic_moments is not None
+        and not isinstance(primitive_matrix, np.ndarray)
+        and primitive_matrix == "auto"
+    ):
         if np.any(cell.magnetic_moments != 0.0):
             raise ValueError(
                 "For materials with magnetic moments specified "
@@ -248,12 +251,11 @@ def generate_frequencies_eigenvectors(
     kwargs: dict
         Additional parameters that are passed to PhononBSDOSDoc.from_forces_born
     """
-    if "magmom" in structure.site_properties:
-        if (
-            code != "vasp"
-            or (np.array(structure.site_properties.get("magmom")) < symprec).all()
-        ):
-            structure.remove_site_property(property_name="magmom")
+    if "magmom" in structure.site_properties and (
+        code != "vasp"
+        or (np.array(structure.site_properties.get("magmom")) < symprec).all()
+    ):
+        structure.remove_site_property(property_name="magmom")
 
     return PhononBSDOSDoc.from_forces_born(
         structure=structure,

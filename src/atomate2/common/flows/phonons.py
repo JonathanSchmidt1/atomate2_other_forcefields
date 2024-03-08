@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+import numpy as np
 from jobflow import Flow, Maker
 
 from atomate2.common.jobs.phonons import (
@@ -201,17 +202,21 @@ class BasePhononMaker(Maker, ABC):
                 f"You can't use {kpath_scheme=} with the primitive standard "
                 "structure, please use seekpath"
             )
-        if (
-            structure.site_properties.get("magmom")
-            and self.code == "vasp"
-            and any(structure.site_properties.get("magmom") > self.symprec)
-            and (use_symmetrized_structure != "primitive" or kpath_scheme != "seekpath")
-        ):
-            raise ValueError(
-                "For materials with magnetic moments specified "
-                "use_symmetrized_structure must be 'primitive "
-                "and kpath_scheme must be seekpath."
-            )
+        if structure.site_properties.get("magmom"):
+            if (
+                self.code != "vasp"
+                or (
+                    np.array(structure.site_properties.get("magmom")) > self.symprec
+                ).any()
+            ):
+                structure.remove_site_property("magmom")
+            elif use_symmetrized_structure != "primitive" or kpath_scheme == "seekpath":
+                raise ValueError(
+                    "For materials with magnetic moments specified "
+                    "use_symmetrized_structure must be 'primitive "
+                    "and kpath_scheme must not be seekpath."
+                )
+
         valid_schemes = ("seekpath", "hinuma", "setyawan_curtarolo", "latimer_munro")
         if kpath_scheme not in valid_schemes:
             raise ValueError(
@@ -229,7 +234,10 @@ class BasePhononMaker(Maker, ABC):
         # TODO: should this be after or before structural optimization as the
         #  optimization could change the symmetry we could add a tutorial and point out
         #  that the structure should be nearly optimized before the phonon workflow
-        if self.use_symmetrized_structure == "primitive":
+        if (
+            self.use_symmetrized_structure == "primitive"
+            and not structure.site_properties.get("magmom")
+        ):
             # These structures are compatible with many
             # of the kpath algorithms that are used for Materials Project
             prim_job = structure_to_primitive(structure, self.symprec)
